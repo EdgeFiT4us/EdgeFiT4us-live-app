@@ -1,0 +1,17 @@
+export type SetLog={id:string;exercise:string;weight:number;reps:number;at:string};
+export type Workout={id:string;date:string;notes:string;sets:SetLog[];demo?:boolean};
+export type Profile={name:string;goal:string;weight:string;experience:string;days:number};
+export const EXERCISES=['Flat Dumbbell Press','Incline Dumbbell Press','Cable Fly','Lat Pulldown','Seated Cable Row','Single-Arm Lat Pulldown','Dumbbell Shoulder Press','Lateral Raise','Preacher Curl','Hammer Curl','Rope Triceps Pushdown','Overhead Triceps Extension','Squat','Romanian Deadlift','Leg Press','Leg Curl','Calf Raise','Deadlift'];
+const make=(id:string,date:string,exercise:string,entries:[number,number][]):Workout=>({id,date,notes:'Demonstration workout',demo:true,sets:entries.map(([weight,reps],i)=>({id:`${id}-${i}`,exercise,weight,reps,at:date}))});
+export const DEMOS:Workout[]=[make('demo1','2026-09-20','Flat Dumbbell Press',[[60,12],[65,10],[65,9]]),make('demo2','2026-09-27','Flat Dumbbell Press',[[65,12],[70,10],[70,8]]),make('demo3','2026-10-04','Flat Dumbbell Press',[[70,12],[75,10],[75,8]]),make('demo4','2026-10-07','Lat Pulldown',[[100,12],[110,10],[110,9]])];
+export const defaultProfile:Profile={name:'Athlete',goal:'Build strength and consistency',weight:'',experience:'Intermediate',days:4};
+export const uid=()=>globalThis.crypto?.randomUUID?.()??`${Date.now()}-${Math.random()}`;
+export const dateKey=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+export const volume=(w:Workout)=>w.sets.reduce((s,x)=>s+x.weight*x.reps,0);
+export const isReal=(w:Workout)=>!w.demo;
+export const prs=(workouts:Workout[])=>{const out=new Map<string,{weight:number;reps:number;volume:number}>();for(const w of [...workouts].sort((a,b)=>a.date.localeCompare(b.date))){for(const s of w.sets){const prev=out.get(s.exercise);out.set(s.exercise,{weight:Math.max(prev?.weight??0,s.weight),reps:Math.max(prev?.reps??0,s.reps),volume:Math.max(prev?.volume??0,s.weight*s.reps)})}}return out};
+export const uniqueDates=(workouts:Workout[])=>new Set(workouts.filter(isReal).filter(w=>w.sets.length).map(w=>w.date));
+export const weekCount=(workouts:Workout[],now=new Date())=>{const start=new Date(now);start.setDate(start.getDate()-((start.getDay()+6)%7));start.setHours(0,0,0,0);return [...uniqueDates(workouts)].filter(d=>new Date(`${d}T12:00:00`)>=start).length};
+export const previousExercise=(workouts:Workout[],exercise:string,currentId?:string)=>[...workouts].filter(w=>w.id!==currentId&&w.sets.some(s=>s.exercise===exercise)).sort((a,b)=>b.date.localeCompare(a.date))[0];
+export const performance=(w:Workout,exercise:string)=>{const sets=w.sets.filter(s=>s.exercise===exercise);return {top:Math.max(0,...sets.map(s=>s.weight)),volume:sets.reduce((a,s)=>a+s.weight*s.reps,0),sets:sets.length}};
+export const achievement=(workouts:Workout[],current:Workout,exercise:string)=>{const prev=previousExercise(workouts,exercise,current.id);if(!prev)return null;const before=performance(prev,exercise),now=performance(current,exercise);if(now.top>before.top)return `New ${exercise} top weight: ${now.top} lb (+${now.top-before.top} lb vs previous session)!`;if(now.volume>before.volume)return `${exercise} volume increased by ${Math.round((now.volume/before.volume-1)*100)}% vs previous session!`;return null};
