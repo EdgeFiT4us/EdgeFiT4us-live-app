@@ -111,3 +111,4 @@
  .dashboard-new .dash-workout-body p{font-size:12px;line-height:1.4}
  .dashboard-new .dash-start{margin-top:13px}
 }
+.change-workout{min-height:48px;margin-top:10px;font-size:15px;font-weight:700;border-color:#ff7800;color:#ff9a40}.routine-picker button,.routine-picker input,.routine-picker select{min-height:48px}.routine-picker .soft{color:#c1c7d0}.dash-workout-body h2{font-size:clamp(30px,8vw,46px)}

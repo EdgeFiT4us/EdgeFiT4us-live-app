@@ -15,3 +15,13 @@ Branch: `development/phase-1-accounts-dashboard`. No database migrations, deploy
 The safe preview forcibly disables the Supabase client even if real project variables are present. It uses separate `:design-preview` storage keys and never imports legacy history automatically. Preview records belong only to this test workspace. Any optional **Show demo data** view is sample-only and separate from records you log.
 
 Real registration/login/cloud synchronization remain pending SQL review and database setup. This preview tests the app's profile and training workflows, not live account security. Original device history remains in its original browser/origin, unaffected by a Codespaces test preview.
+
+## Workout selection update
+
+Chest + Arms is the first suggested routine for a workspace without a previous selection. It has Flat Dumbbell Press (4 sets), Incline Dumbbell Press (3), Cable Chest Fly (3), Overhead Triceps Extension (3), Rope Triceps Pushdown (3), and Preacher Curl (3).
+
+Use **Change Workout** on Home or Log to filter by muscle group, choose a suggestion, or create a custom routine. Selecting another routine keeps all sets in the active session. The routine selection and custom routines persist on this device, scoped to the preview or signed-in account. These preferences are not cloud-synchronized yet. No existing workout history is rewritten.
+
+Verified using an iPhone-sized Chromium viewport: profile setup, initial Chest + Arms suggestion, muscle-group selection, custom routine creation, two individual saved sets, switching without losing sets, selected routine and active-session recovery after reload, workout completion, history and progress charts. Checked no horizontal overflow at 320, 375, 390, and 430px widths. No Supabase requests occurred, and original history storage remained unchanged. Browser simulation does not replace testing on physical iPhone Safari.
+
+For an existing Codespace, stop the dev server, run `git pull --ff-only` while on the development branch, and restart with `VITE_PREVIEW_MODE=true npm run dev -- --port 5173`. Keep the port private. A newly created Codespace loads these changes automatically.
