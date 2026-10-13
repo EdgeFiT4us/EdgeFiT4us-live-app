@@ -1,41 +1,77 @@
--- APPROVAL REQUIRED. Prepared for review; not executed by the application.
--- No existing rows, auth users, legacy records, or storage buckets are deleted.
-begin;
-create table if not exists public.user_data (
- user_id uuid not null references auth.users(id),
- key text not null check (key in ('edgefit-profile-v1','edgefit-workouts-v1','edgefit-active-session-v1')),
- value jsonb not null,
- revision bigint not null default 1,
- primary key (user_id,key)
+-- REVISED MIGRATION: review and fresh approval required before execution.
+-- Creates new objects only; aborts if an app table/function already exists.
+BEGIN;
+
+DO $$
+BEGIN
+  IF to_regclass('public.user_data') IS NOT NULL THEN
+    RAISE EXCEPTION 'user_data already exists. Stop and review; nothing will be replaced.';
+  END IF;
+  IF to_regprocedure('public.edgefit_revision()') IS NOT NULL THEN
+    RAISE EXCEPTION 'edgefit_revision already exists. Stop and review; nothing will be replaced.';
+  END IF;
+END;
+$$;
+
+CREATE TABLE public.user_data (
+  user_id uuid NOT NULL REFERENCES auth.users(id),
+  key text NOT NULL CHECK (
+    key IN (
+      'edgefit-profile-v1',
+      'edgefit-workouts-v1',
+      'edgefit-active-session-v1'
+    )
+  ),
+  value jsonb NOT NULL,
+  revision bigint NOT NULL DEFAULT 1,
+  PRIMARY KEY (user_id, key),
+  CONSTRAINT customer_workouts_only CHECK (
+    key <> 'edgefit-workouts-v1'
+    OR (
+      jsonb_typeof(value) = 'array'
+      AND NOT jsonb_path_exists(
+        value,
+        '$[*] ? (@.demo == true || @.testOnly == true)'
+      )
+    )
+  )
 );
-alter table public.user_data add column if not exists revision bigint not null default 1;
-alter table public.user_data enable row level security;
-alter table public.user_data force row level security;
--- Abort rather than silently retaining unknown policies that could grant access.
-do $$ begin
- if exists (select 1 from pg_policies where schemaname='public' and tablename='user_data'
- and policyname not in ('Read own fitness data','Insert own fitness data','Update own fitness data')) then
- raise exception 'Unexpected user_data policies: review before applying this migration';
- end if;
-end $$;
-drop policy if exists "Read own fitness data" on public.user_data;
-drop policy if exists "Insert own fitness data" on public.user_data;
-drop policy if exists "Update own fitness data" on public.user_data;
-create policy "Read own fitness data" on public.user_data for select to authenticated using ((select auth.uid())=user_id);
-create policy "Insert own fitness data" on public.user_data for insert to authenticated with check ((select auth.uid())=user_id);
-create policy "Update own fitness data" on public.user_data for update to authenticated using ((select auth.uid())=user_id) with check ((select auth.uid())=user_id);
-revoke all on public.user_data from anon;
-revoke all on public.user_data from authenticated;
-grant select,insert,update on public.user_data to authenticated;
-create or replace function public.edgefit_revision() returns trigger language plpgsql set search_path='' as $$
-begin new.revision=old.revision+1; return new; end $$;
-drop trigger if exists edgefit_revision on public.user_data;
-create trigger edgefit_revision before update on public.user_data for each row execute function public.edgefit_revision();
-do $$ begin
- if not exists(select 1 from pg_constraint where conrelid='public.user_data'::regclass and conname='customer_workouts_only') then
- alter table public.user_data add constraint customer_workouts_only check (
- key <> 'edgefit-workouts-v1' or (jsonb_typeof(value)='array' and not jsonb_path_exists(value,'$[*] ? (@.demo == true || @.testOnly == true)'))
- );
- end if;
-end $$;
-commit;
+
+ALTER TABLE public.user_data ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_data FORCE ROW LEVEL SECURITY;
+
+-- Restrict permissions on this newly created table only.
+REVOKE ALL ON TABLE public.user_data FROM PUBLIC, anon, authenticated;
+GRANT SELECT, INSERT, UPDATE ON TABLE public.user_data TO authenticated;
+
+CREATE POLICY "Read own fitness data"
+  ON public.user_data FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "Insert own fitness data"
+  ON public.user_data FOR INSERT TO authenticated
+  WITH CHECK ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "Update own fitness data"
+  ON public.user_data FOR UPDATE TO authenticated
+  USING ((SELECT auth.uid()) = user_id)
+  WITH CHECK ((SELECT auth.uid()) = user_id);
+
+CREATE FUNCTION public.edgefit_revision()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $$
+BEGIN
+  NEW.revision := OLD.revision + 1;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER edgefit_revision
+  BEFORE UPDATE ON public.user_data
+  FOR EACH ROW
+  EXECUTE FUNCTION public.edgefit_revision();
+
+COMMIT;

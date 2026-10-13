@@ -18,3 +18,13 @@ Before real registration tests, configure Auth URL allowlisting for the actual l
 Legacy and preview history remain separate from account data. No automatic migration. Cloud saves are serialized, authenticate the owner, and use revision-checked updates. Different workout IDs merge; concurrent conflicting edits to the same workout stop with a recoverable error. Pending account edits are retained under that account's local pending key for reload recovery. No demo/test records are saved to customer history.
 
 No merge, deployment, paid plan, or photo storage provisioning.
+
+## Revised migration awaiting fresh authorization
+
+The original migration contained three `DROP POLICY` statements, one `DROP TRIGGER`, and `CREATE OR REPLACE FUNCTION` to support reruns. Those operations affected schema objects, not customer rows, but they are unnecessary for the currently empty project and have been removed.
+
+The revised `phase2-setup.sql` creates new objects only and aborts if the app table or function already exists. It has no DROP, DELETE, TRUNCATE, or data-changing UPDATE statement. The UPDATE keyword appears only in permission, policy, and trigger definitions for future owner-authorized edits. REVOKE limits access on the newly created table only. No auth users, workout rows, or storage objects are inserted or changed by the migration.
+
+The separate isolation test contains UPDATE and DELETE attempts against synthetic test IDs, plus INSERTs for synthetic identities/rows. It ends with ROLLBACK and cleanup verification. It must receive separate authorization and must not be bundled with the migration.
+
+No revised migration or test has been executed.
