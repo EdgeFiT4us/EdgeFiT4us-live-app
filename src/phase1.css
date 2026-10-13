@@ -7,3 +7,35 @@
 
 @media(max-width:640px){.brand-name{font-size:26px}.brand-pill{font-size:8px;padding:5px 7px}.brand-shell{gap:10px;padding:9px 10px;border-radius:14px}.brand-mark{width:38px;height:38px;border-radius:11px}.brand-icon{width:25px;height:25px}}
 @media(max-width:640px){.dash-workout{min-height:330px;padding:21px}.dash-workout .session-count{margin-top:20px}.dash-workout-body h2{font-size:44px}.workout-meta{margin:20px 0 17px}}
+/* Header treatments share one clean asset and one optical alignment system. */
+.fitness-header{position:sticky;top:0;z-index:20;background:#0c0d10;border-bottom:1px solid #292c32}
+.fitness-header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:19px 22px;min-height:96px}
+.fitness-brand{display:flex;align-items:center;gap:14px;min-width:0;padding:0;background:none;border:0;text-align:left;color:#f5f5f5}
+.fitness-icon-frame{display:flex;align-items:center;justify-content:center;width:52px;height:52px;flex:0 0 52px;border:1px solid #6e3b17;border-radius:14px;background:#1b1713;overflow:visible}
+.fitness-icon{display:block;width:43px;height:43px;object-fit:contain;filter:none;transform:translate(.5px,-.5px)}
+.fitness-brand-copy{display:flex;flex-direction:column;gap:7px;justify-content:center;min-width:0}
+.fitness-wordmark{display:block;font-family:'DM Sans',Arial,sans-serif;font-size:27px;font-weight:800;letter-spacing:.1px;line-height:1.05}
+.fitness-tagline{display:block;color:#ffa45b;font-family:'DM Sans',Arial,sans-serif;font-size:12px;font-weight:500;line-height:1.3;letter-spacing:.2px;white-space:nowrap}
+.fitness-profile{display:flex;align-items:center;justify-content:center;width:44px;height:44px;flex:0 0 44px;padding:0;border:1px solid #39322b;border-radius:12px;background:#17130f;color:#ff9b49}
+.fitness-header[data-variant='B'] .fitness-icon-frame{background:transparent;border:0;border-radius:0;width:48px;height:52px;flex-basis:48px}
+.fitness-header[data-variant='B'] .fitness-icon{width:47px;height:47px}
+.workspace-mode{font-size:12px;line-height:1.5;color:#a3a8b3;padding:10px 20px}
+.workspace-mode button{font-size:12px;color:#d8dbe0;min-height:24px}
+.header-review{max-width:850px;margin:0 auto;padding:55px 24px;background:#08090b;min-height:100vh}
+.review-intro>span{color:#ff9c50;font-size:11px;letter-spacing:1.3px}
+.review-intro h1{font-family:'DM Sans',Arial,sans-serif;font-size:34px;line-height:1.2;font-weight:700;letter-spacing:-1px;margin:18px 0}
+.review-intro p{font-size:14px;line-height:1.7;color:#a3a8b3;max-width:500px}
+.header-review-card{border:1px solid #2a2d35;border-radius:14px;margin-top:28px;overflow:hidden;background:#141519}
+.header-review-label{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px 22px}
+.header-review-label strong{font-size:15px;font-weight:600}
+.header-review-label span{font-size:12px;color:#929aa9}
+.header-review-card .fitness-header{position:static;border-top:1px solid #292c32}
+.header-review-card>p{font-size:13px;line-height:1.7;color:#a3a8b3;margin:20px 22px 12px}
+.header-review-card>a{color:#ff9c50;font-size:13px;display:inline-block;margin:0 22px 21px;text-decoration:underline;text-underline-offset:4px}
+.header-review-footer{font-size:12px;color:#7b8494;margin-top:28px}
+@media(max-width:640px){.fitness-header-inner{padding:17px 19px;gap:12px;min-height:89px}.fitness-brand{gap:11px}.fitness-icon-frame{width:46px;height:46px;flex-basis:46px;border-radius:12px}.fitness-icon{width:40px;height:40px}.fitness-wordmark{font-size:23px;letter-spacing:.05px}.fitness-tagline{font-size:11px;letter-spacing:0;line-height:1.4}.fitness-brand-copy{gap:5px}.fitness-profile{width:40px;height:40px;flex-basis:40px;border-radius:10px}.fitness-header[data-variant='B'] .fitness-icon-frame{width:42px;flex-basis:42px;height:46px}.fitness-header[data-variant='B'] .fitness-icon{width:43px;height:43px}.workspace-mode{font-size:11px;padding:9px 16px;gap:8px}.workspace-mode button{font-size:11px}.workspace-mode span{max-width:220px}.header-review{padding:34px 19px}.review-intro h1{font-size:27px}.header-review-card .fitness-header-inner{padding:17px 13px;gap:9px}.header-review-card .fitness-wordmark{font-size:21px}.header-review-card .fitness-brand{gap:9px}.header-review-card .fitness-tagline{font-size:10px}}
+@media(max-width:359px){.fitness-header-inner{padding-left:14px;padding-right:14px;gap:8px}.fitness-brand{gap:8px}.fitness-wordmark{font-size:21px}.fitness-tagline{font-size:10px}.fitness-icon-frame{width:42px;height:44px;flex-basis:42px}.fitness-profile{width:36px;height:38px;flex-basis:36px}}
+@media(max-width:640px){.fitness-tagline{font-size:12px}.header-review-card .fitness-tagline{font-size:12px}.workspace-mode{font-size:12px}.workspace-mode button{font-size:12px}}
+.dash-main-grid>section{min-width:0}
+@media(max-width:950px){.dash-main-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:359px){.week-day-grid{gap:4px}.week-day-grid b{width:100%;max-width:30px}.dash-workout-body h2{font-size:40px}.fitness-tagline{font-size:11px}.workspace-mode{font-size:11px}.workspace-mode button{font-size:11px}}
