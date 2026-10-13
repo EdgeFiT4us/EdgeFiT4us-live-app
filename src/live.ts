@@ -1,4 +1,4 @@
-import {dateKey,uid,type Workout,type SetLog,volume} from './model';
+import {dateKey,uid,type Workout,type SetLog,volume,isReal} from './model';
 export type LiveWorkout=Workout & {startedAt?:string;completedAt?:string};
 export type SetFeedback={message:string;isPR:boolean;improvedWeight:boolean;improvedReps:boolean;improvedStrength:boolean;improvedVolume:boolean};
 export const estimatedOneRepMax=(weight:number,reps:number)=>weight*(1+reps/30);
@@ -14,14 +14,14 @@ export function editLiveSet(session:LiveWorkout,id:string,weight:number,reps:num
 }
 export function deleteLiveSet(session:LiveWorkout,id:string):LiveWorkout{return {...session,sets:session.sets.filter(s=>s.id!==id)};}
 export function previousSession(workouts:Workout[],exercise:string,currentId:string):Workout|undefined{
- return [...workouts].filter(w=>!w.demo&&w.id!==currentId&&w.sets.some(s=>s.exercise===exercise)).sort((a,b)=>{
+ return [...workouts].filter(w=>isReal(w)&&w.id!==currentId&&w.sets.some(s=>s.exercise===exercise)).sort((a,b)=>{
   const at=Math.max(...a.sets.map(s=>Date.parse(s.at)||0),Date.parse(a.date)||0);
   const bt=Math.max(...b.sets.map(s=>Date.parse(s.at)||0),Date.parse(b.date)||0);
   return bt-at;
  })[0];
 }
 export function compareSet(previous:Workout[],current:LiveWorkout,newSet:SetLog):SetFeedback{
- const history=previous.filter(w=>!w.demo&&w.id!==current.id).flatMap(w=>w.sets.filter(s=>s.exercise===newSet.exercise));
+ const history=previous.filter(w=>isReal(w)&&w.id!==current.id).flatMap(w=>w.sets.filter(s=>s.exercise===newSet.exercise));
  const old=previousSession(previous,newSet.exercise,current.id);
  const oldSets=old?.sets.filter(s=>s.exercise===newSet.exercise)??[];
  const beforeCurrent=current.sets.filter(s=>s.exercise===newSet.exercise&&s.id!==newSet.id);

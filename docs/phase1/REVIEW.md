@@ -94,3 +94,22 @@ SVG loading, wordmark/icon vertical alignment, and horizontal overflow checks pa
 Browser checks confirm the full workout button is above the fixed bottom navigation without scrolling at 320 × 568, 375 × 667, 390 × 844, and 430 × 932. No horizontal overflow. A seeded existing session retained its original ID, notes, set IDs, weight, reps, and timestamp after viewing the plan, recording a new set, and reloading. Screenshots use that isolated test fixture, not a live user's records.
 
 Production build passes, and the 17 workout/migration tests pass. No merge or deployment.
+
+## Screenshot data provenance and account isolation
+
+The earlier Alex Morgan screenshot was captured with a one-off, isolated Chromium test fixture. That fixture contained one synthetic 60 lb × 10 press set, intentionally treated as a real-format record to test preservation. It was not a Supabase account, app seed, default customer, or a copy of the owner's real training history. The 1 personal best was the recorded exercise's baseline maximum, not a claimed improvement. No fixture was saved to a customer account or the live site.
+
+The updated [fresh-user screenshot](dashboard-new-user-zero.png) demonstrates a user-entered name and zero workouts/personal bests. The name is typed by the test browser, never supplied as an application default.
+
+Safeguards in this branch:
+
+- Default profile name is blank; registration and first-use local setup require a nonblank personal name. Signed-in accounts missing a name must finish their own profile.
+- A successful account read initializes all workspace keys; absent workouts are an empty array and the active session is null. It never falls back to legacy or preview workout history, or a stale missing-row cache.
+- Legacy, design-preview, and each authenticated account use distinct browser storage keys. Preview onboarding and logging do not change legacy records or profiles.
+- Demo view shows sample sessions separately, rather than combining them with actual history in one series/list. Sample records never contribute personal stats.
+- Cloud-save, account-read, and migration paths reject demo/test-marked workout records. Imports add missing real record IDs only; legacy originals remain unchanged.
+- When Supabase is configured, unauthenticated exploration opens only the isolated sample workspace, not the legacy owner workspace. Customer records require sign-in.
+- The existing `supabase/phase1.sql` requires the authenticated owner ID for reads/writes. `supabase/data-separation.sql` prepares an additional backend constraint rejecting demo/test workout entries; no SQL has been applied.
+- Progress-photo uploads and buckets are not yet implemented or enabled. Before Phase 2 enables them, require a private bucket, user-ID-prefixed paths, owner-only metadata/object policies, and authenticated short-lived reads. No public photo URLs.
+
+The owner's existing browser keys and original history are retained. Future migration requires explicit consent in the owner's authenticated personal account; no automatic account claiming or migration occurs. Live Supabase account/photo isolation testing remains pending service connection and photo implementation.
