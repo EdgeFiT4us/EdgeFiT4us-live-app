@@ -66,8 +66,8 @@ The original `edgefit-icon.png` contained white pieces of the wordmark at the bo
 
 The new shared header removes the old glowing image filter and oversized outer brand capsule. The wordmark has a stable baseline and the supporting text is larger, higher contrast, and less widely spaced.
 
-- Version A: rounded-square icon frame (current default).
-- Version B: standalone orange icon with no frame.
+- Version A: rounded-square icon frame (retained for comparison).
+- Version B: standalone orange icon with no frame (approved default).
 
 In the running preview, use `?review=headers` for the comparison screen, `?header=A` for the A dashboard, and `?header=B` for B. Header choice does not write or change workout records.
 
