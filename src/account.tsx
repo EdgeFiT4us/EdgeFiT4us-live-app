@@ -1,28 +1,29 @@
-import React,{createContext,useContext,useEffect,useState} from 'react';
-import {createClient,type Session} from '@supabase/supabase-js';
+import React,{createContext,useContext,useEffect,useState,useRef} from 'react';
+import {type Session} from '@supabase/supabase-js';import {supabase} from './utils/supabase';export {supabase} from './utils/supabase';
 import {ArrowRight,ArrowLeft,Eye,EyeOff,Check,ShieldCheck,Dumbbell,User,ChevronRight,LogOut} from 'lucide-react';
-import {defaultProfile,type Profile,type Workout} from './model';import {storageKey,createAccountWorkspace,customerWorkouts,PROFILE_KEY,WORKOUTS_KEY} from './accountData';export {storageKey} from './accountData';
-const url=import.meta.env.VITE_SUPABASE_URL,key=import.meta.env.VITE_SUPABASE_ANON_KEY;
-export const supabase=url&&key?createClient(url,key):null;
+import {defaultProfile,type Profile,type Workout} from './model';import {storageKey,createAccountWorkspace,customerWorkouts,PROFILE_KEY,WORKOUTS_KEY} from './accountData';export {storageKey} from './accountData';import {saveCloudValue,flushCloudSaves} from './cloudHistory';
 type AccountContextType={session:Session|null;data:Record<string,unknown>;preview:boolean;exit:()=>void;};
 const AccountContext=createContext<AccountContextType>({session:null,data:{},preview:false,exit:()=>{}});
 export const useAccount=()=>useContext(AccountContext);
 
 export function usePersist<T>(key:string,initial:T){
  const {session,data,preview}=useAccount();const userId=session?.user.id,localKey=storageKey(key,userId,preview);
- const[value,setValue]=useState<T>(()=>{try{if(userId&&key in data)return data[key] as T;const cached=localStorage.getItem(localKey);return cached?JSON.parse(cached):(data[key] as T??initial)}catch{return data[key] as T??initial}});
+ const pendingKey=`${localKey}:pending`;
+ const[pending]=useState(()=>{if(!userId)return null;try{const raw=localStorage.getItem(pendingKey);return raw?JSON.parse(raw):null}catch{return null}});
+ const[value,setValue]=useState<T>(()=>{try{if(pending)return pending.value as T;if(userId&&key in data)return data[key] as T;const cached=localStorage.getItem(localKey);return cached?JSON.parse(cached):(data[key] as T??initial)}catch{return data[key] as T??initial}});
+ const synced=useRef<unknown>(pending?pending.baseline:value);const current=useRef(value);current.current=value;
  const[blocked]=useState(()=>{if(userId)return false;try{const raw=localStorage.getItem(localKey);if(raw)JSON.parse(raw);return false}catch{return true}});
  const[saveError,setSaveError]=useState(blocked?'Existing device data could not be read. The original storage is preserved; do not clear browser data.':'');
  // The account snapshot loaded before mounting is authoritative; retained cache is offline backup only.
 
- useEffect(()=>{if(blocked)return;try{localStorage.setItem(localKey,JSON.stringify(value));setSaveError('')}catch{setSaveError('Device storage is full or unavailable. Export a backup before leaving.')}if(!userId||!supabase)return;let active=true;const timer=setTimeout(()=>{supabase!.from('user_data').upsert({user_id:userId,key,value:key===WORKOUTS_KEY?customerWorkouts(value as Workout[]):value},{onConflict:'user_id,key'}).then(({error})=>{if(active&&error)setSaveError('Cloud save failed. Changes are kept on this device. Reload after exporting a backup to reconnect.')})},350);return()=>{active=false;clearTimeout(timer)}},[localKey,userId,key,value,blocked]);
+ useEffect(()=>{if(blocked)return;try{if(userId&&JSON.stringify(value)!==JSON.stringify(synced.current))localStorage.setItem(pendingKey,JSON.stringify({value,baseline:synced.current}));localStorage.setItem(localKey,JSON.stringify(value));setSaveError('')}catch{setSaveError('Device storage is full or unavailable. Export a backup before leaving.')}if(!userId||!supabase||JSON.stringify(value)===JSON.stringify(synced.current))return;let active=true;setSaveError('Saving to your private account…');const timer=setTimeout(()=>{saveCloudValue(userId,key,value,()=>synced.current).then(saved=>{synced.current=saved;if(active){setSaveError('');if(JSON.stringify(current.current)===JSON.stringify(value)){localStorage.removeItem(pendingKey);setValue(saved as T)}}}).catch(error=>{if(active)setSaveError(`Cloud save pending: ${error.message||'Unable to connect.'} Your local copy is kept. Export a backup before leaving.`)})},250);return()=>{active=false;clearTimeout(timer)}},[localKey,userId,key,value,blocked]);
  return[value,setValue,saveError] as const;
 }
 export function AccountShell({children}:{children:React.ReactNode}){
  const[session,S]=useState<Session|null>(null),[data,D]=useState<Record<string,unknown>>({}),[ready,R]=useState(!supabase),[local,L]=useState(false),[preview,J]=useState(false),[failure,F]=useState(''),[recovery,H]=useState(false);
- useEffect(()=>{if(!supabase)return;const{data:listener}=supabase.auth.onAuthStateChange((_event,next)=>{S(next);D({});F('');R(!next);if(_event==='PASSWORD_RECOVERY')H(true)});return()=>listener.subscription.unsubscribe()},[]);
+ useEffect(()=>{if(!supabase)return;const{data:listener}=supabase.auth.onAuthStateChange((_event,next)=>{if(_event==='TOKEN_REFRESHED'){S(v=>v?.user.id===next?.user.id?v:next);return}S(next);D({});F('');R(!next);if(_event==='PASSWORD_RECOVERY')H(true)});return()=>listener.subscription.unsubscribe()},[]);
  useEffect(()=>{if(!session){R(true);return}let active=true;R(false);supabase!.from('user_data').select('key,value').eq('user_id',session.user.id).then(({data:rows,error})=>{if(!active)return;if(error){F('Your account data could not be loaded. Retry to protect your saved records.');return}const loaded=createAccountWorkspace(Object.fromEntries((rows||[]).map(r=>[r.key,r.value])),session.user.user_metadata);D(loaded);R(true)});return()=>{active=false}},[session]);
- const exit=async()=>{if(session&&supabase){const{error}=await supabase.auth.signOut();if(error){F('Could not sign out. Please try again.');return}}L(false);J(false);S(null);D({});F('');H(false);R(true)};
+ const exit=async()=>{if(session&&supabase){try{await flushCloudSaves()}catch{if(!confirm('Some cloud saves failed. Your changes are kept on this device. Sign out anyway?'))return}const{error}=await supabase.auth.signOut();if(error){F('Could not sign out. Please try again.');return}}L(false);J(false);S(null);D({});F('');H(false);R(true)};
  if(failure)return <div className="account-loading"><h1>Let’s reconnect.</h1><p role="alert">{failure}</p><button className="btn" onClick={()=>location.reload()}>Retry</button><button className="btn-secondary" onClick={exit}>Return to sign-in</button></div>;
  if(recovery&&session)return <ResetPassword onDone={()=>H(false)}/>;
  if(!ready)return <div className="account-loading"><img src={`${import.meta.env.BASE_URL}edgefit-symbol-clean.svg`} alt="EdgeFiT4us"/><p>Opening your training space…</p></div>;
