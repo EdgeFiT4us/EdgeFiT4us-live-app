@@ -81,3 +81,16 @@ Updated screenshots:
 - [Version B desktop dashboard](header-B-dashboard-desktop.png)
 
 SVG loading, wordmark/icon vertical alignment, and horizontal overflow checks pass at 320, 375, 390, 430, 768, and 1440 pixels wide for both variants.
+
+## Approved Version B — final dashboard refinement
+
+- Version B remains the official/default header.
+- Brightened secondary text, increased small-label sizes, and tightened spacing.
+- On mobile, the workout appears before statistics; its primary button appears before exercise/time metadata.
+- The label is **View Today’s Workout** because the action opens the plan without starting or saving a workout. Active sessions retain **Resume workout**.
+- [Updated mobile dashboard, 390 × 844](dashboard-approved-B-mobile.png)
+- [Updated full dashboard](dashboard-approved-B-full.png)
+
+Browser checks confirm the full workout button is above the fixed bottom navigation without scrolling at 320 × 568, 375 × 667, 390 × 844, and 430 × 932. No horizontal overflow. A seeded existing session retained its original ID, notes, set IDs, weight, reps, and timestamp after viewing the plan, recording a new set, and reloading. Screenshots use that isolated test fixture, not a live user's records.
+
+Production build passes, and the 17 workout/migration tests pass. No merge or deployment.
