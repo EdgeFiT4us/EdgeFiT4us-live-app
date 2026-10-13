@@ -1,8 +1,8 @@
 {
-  "name": "EdgeFiT4us Phase 1 design preview",
+  "name": "EdgeFiT4us private test preview",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
   "forwardPorts": [5173],
   "portsAttributes": { "5173": { "label": "EdgeFiT4us preview", "onAutoForward": "openPreview" } },
   "postCreateCommand": "npm ci",
-  "postStartCommand": "bash -lc 'nohup npm run dev -- --port 5173 > /tmp/edgefit-preview.log 2>&1 &'"
+  "postStartCommand": "bash -lc 'VITE_PREVIEW_MODE=true nohup npm run dev -- --port 5173 > /tmp/edgefit-preview.log 2>&1 &'"
 }
