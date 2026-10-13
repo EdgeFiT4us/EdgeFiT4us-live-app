@@ -13,7 +13,7 @@ export function usePersist<T>(key:string,initial:T){
  const[value,setValue]=useState<T>(()=>{try{if(userId&&key in data)return data[key] as T;const cached=localStorage.getItem(localKey);return cached?JSON.parse(cached):(data[key] as T??initial)}catch{return data[key] as T??initial}});
  const[saveError,setSaveError]=useState('');
  // The account snapshot loaded before mounting is authoritative; retained cache is offline backup only.
- 
+
  useEffect(()=>{try{localStorage.setItem(localKey,JSON.stringify(value));setSaveError('')}catch{setSaveError('Device storage is full or unavailable. Export a backup before leaving.')}if(!userId||!supabase)return;let active=true;const timer=setTimeout(()=>{supabase!.from('user_data').upsert({user_id:userId,key,value},{onConflict:'user_id,key'}).then(({error})=>{if(active&&error)setSaveError('Cloud save failed. Changes are kept on this device. Reload after exporting a backup to reconnect.')})},350);return()=>{active=false;clearTimeout(timer)}},[localKey,userId,key,value]);
  return[value,setValue,saveError] as const;
 }
