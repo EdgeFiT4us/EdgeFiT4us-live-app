@@ -1,6 +1,6 @@
 export type SetLog={id:string;exercise:string;weight:number;reps:number;at:string};
 export type Workout={id:string;date:string;notes:string;sets:SetLog[];demo?:boolean};
-export type Profile={name:string;goal:string;weight:string;experience:string;days:number};
+export type Profile={name:string;goal:string;weight:string;experience:string;days:number;gender?:string;genderDescription?:string;equipment?:string};
 export const EXERCISES=['Flat Dumbbell Press','Incline Dumbbell Press','Cable Fly','Lat Pulldown','Seated Cable Row','Single-Arm Dumbbell Row','Rear Delt Fly','Single-Arm Lat Pulldown','Dumbbell Shoulder Press','Lateral Raise','Preacher Curl','Hammer Curl','Rope Triceps Pushdown','Overhead Triceps Extension','Squat','Romanian Deadlift','Leg Press','Leg Curl','Calf Raise','Deadlift'];
 const make=(id:string,date:string,exercise:string,entries:[number,number][]):Workout=>({id,date,notes:'Demonstration workout',demo:true,sets:entries.map(([weight,reps],i)=>({id:`${id}-${i}`,exercise,weight,reps,at:date}))});
 export const DEMOS:Workout[]=[make('demo1','2026-09-20','Flat Dumbbell Press',[[60,12],[65,10],[65,9]]),make('demo2','2026-09-27','Flat Dumbbell Press',[[65,12],[70,10],[70,8]]),make('demo3','2026-10-04','Flat Dumbbell Press',[[70,12],[75,10],[75,8]]),make('demo4','2026-10-07','Lat Pulldown',[[100,12],[110,10],[110,9]])];
