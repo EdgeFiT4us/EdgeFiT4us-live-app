@@ -52,4 +52,30 @@ export function speakCoach(text:string){if(typeof window==='undefined'||!('speec
 export function DailyCoach(){const[dismiss,setDismiss]=useState(false);const phrase=phraseOfDay();return <section className="card p-4 mt-4" aria-label="Daily motivation"><div className="eyebrow">28-DAY MOTIVATION · TODAY</div><p className="text-xl font-bold mt-2">{phrase}</p><p className="text-xs soft mt-2">A new positive message each day. Audio plays only when you request it.</p><div className="flex gap-2 mt-3"><button type="button" className="btn" onClick={()=>{if(!speakCoach(phrase))setDismiss(true)}}>▶ LISTEN TO COACH</button><button type="button" className="btn-secondary" onClick={()=>{if('speechSynthesis' in window)window.speechSynthesis.cancel();setDismiss(false)}}>STOP</button></div>{dismiss&&<p className="text-xs soft mt-2">Voice playback is unavailable in this browser.</p>}</section>}
 export function ReadinessCheck({onApply}:{onApply?:(value:ReturnType<typeof assessReadiness>)=>void}){const[energy,setEnergy]=useState(3),[sleep,setSleep]=useState(3),[soreness,setSoreness]=useState(2),[pain,setPain]=useState(false),[result,setResult]=useState<ReturnType<typeof assessReadiness>|null>(null);const scale=(label:string,val:number,set:(n:number)=>void)=> <label className="block text-sm mt-3">{label}: <strong>{val}/5</strong><input aria-label={label} className="w-full mt-2 accent-orange" type="range" min="1" max="5" value={val} onChange={e=>set(Number(e.target.value))}/></label>;
 return <section className="card p-4 mb-4" aria-label="Pre-workout check-in"><div className="eyebrow">BEFORE YOU TRAIN</div><h3 className="text-2xl font-bold uppercase mt-1">How are you feeling?</h3><p className="text-xs soft mt-1">One is low, five is high. Your answers stay on this screen and are not a diagnosis.</p>{scale('Energy',energy,setEnergy)}{scale('Sleep quality',sleep,setSleep)}{scale('Muscle soreness',soreness,setSoreness)}<label className="flex gap-2 items-center mt-3 text-sm"><input type="checkbox" checked={pain} onChange={e=>setPain(e.target.checked)}/> I have pain or discomfort today</label><button type="button" className="btn mt-4 w-full" onClick={()=>{const value=assessReadiness({energy,sleep,soreness,pain});setResult(value);onApply?.(value)}}>CHECK TODAY'S INTENSITY</button>{result&&<div aria-live="polite" className="mt-4 border-t border-zinc-700 pt-3"><p className="text-orange font-bold">{result.level}</p><p className="text-sm soft mt-1">{result.detail}</p><p className="text-xs soft mt-2">Suggested training volume: {Math.round(result.volume*100)}% of normal. This is a starting suggestion, not an automatic change to logged sets.</p></div>}</section>}
-export function ExerciseGuide({exercise}:{exercise:string}){const g=GUIDES[exercise];if(!g)return null;return <section className="card p-4 mt-3" aria-label={exercise+' instructions'}><div className="eyebrow">EXERCISE GUIDE · PHOTOS COMING LATER</div><h3 className="text-xl font-bold mt-1">{exercise}</h3><p className="soft text-xs mt-1">Targets: {g.muscles}</p><ol className="list-decimal pl-5 text-sm space-y-2 mt-3">{g.steps.map((s,i)=><li key={i}>{s}</li>)}</ol><div className="flex gap-2 mt-4"><button type="button" className="btn-secondary" onClick={()=>speakCoach(g.voice)}>▶ HEAR FORM TIPS</button><button type="button" className="btn-secondary" onClick={()=>{'speechSynthesis' in window&&window.speechSynthesis.cancel()}}>STOP</button></div></section>}
+const MEDIA_IDS:Record<string,string> = {
+ 'Flat Dumbbell Press':'flat-dumbbell-press',
+ 'Incline Dumbbell Press':'incline-dumbbell-press',
+ 'Cable Fly':'cable-chest-fly',
+ 'Overhead Triceps Extension':'overhead-triceps-extension',
+ 'Rope Triceps Pushdown':'rope-triceps-pushdown',
+ 'Preacher Curl':'preacher-curl',
+};
+export function ExerciseGuide({exercise}:{exercise:string}){
+ const g=GUIDES[exercise];const id=MEDIA_IDS[exercise];
+ const [missingImage,setMissingImage]=useState(false);const [missingVideo,setMissingVideo]=useState(false);
+ React.useEffect(()=>{setMissingImage(false);setMissingVideo(false)},[exercise]);
+ if(!g)return null;
+ const root=`${import.meta.env.BASE_URL}exercises/`;
+ return <section className="card p-4 mt-3" aria-label={exercise+' instructions'}>
+ <div className="eyebrow">EDGEFIT4US · VISUAL EXERCISE GUIDE</div>
+ <h3 className="text-xl font-bold mt-1">{exercise}</h3>
+ <p className="soft text-xs mt-1">Targets: {g.muscles}</p>
+ {id&&<div className="mt-4">
+ {!missingImage?<img src={root+id+'.webp'} alt={exercise+' starting and finishing positions'} loading="lazy" className="w-full rounded-xl border border-orange/20" onError={()=>setMissingImage(true)}/>:<div className="rounded-xl border border-zinc-700 p-4 text-sm soft">Guide image is not installed yet. See the media setup instructions.</div>}
+ <h4 className="text-sm font-bold mt-4 mb-2 text-orange">WATCH THE MOVEMENT</h4>
+ {!missingVideo?<video key={id} controls playsInline preload="metadata" poster={missingImage?undefined:root+id+'.webp'} onError={()=>setMissingVideo(true)} className="w-full rounded-xl bg-black" aria-label={exercise+' demonstration video'}><source src={root+id+'.mp4'} type="video/mp4"/>Your browser cannot play this video.</video>:<p className="soft text-xs">Demonstration video is not installed yet.</p>}
+ </div>}
+ <ol className="list-decimal pl-5 text-sm space-y-2 mt-3">{g.steps.map((tip,i)=><li key={i}>{tip}</li>)}</ol>
+ <div className="flex flex-wrap gap-2 mt-4"><button type="button" className="btn-secondary" onClick={()=>speakCoach(g.voice)}>▶ HEAR FORM TIPS</button><button type="button" className="btn-secondary" onClick={()=>{if('speechSynthesis' in window)window.speechSynthesis.cancel()}}>STOP</button></div>
+ </section>
+}
